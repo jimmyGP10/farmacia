@@ -3,7 +3,6 @@
     <h1>Consulta De Productos</h1>
     <div class="search-wrapper">
       <input type="text" v-model="search" placeholder="Buscar..." />
-      <b-button size="sm" class="my-2 my-sm-0" @click="filteredList">Buscar</b-button>
       <b-button size="sm" class="my-2 my-sm-0" @click="clearList">Cancelar</b-button>
     </div>
     <br />
@@ -20,7 +19,7 @@
             </tr>
           </thead>
           <tbody>
-            <tr v-for="(item, index) in productos" :key="index._id">
+            <tr v-for="(item, index) in items" :key="index._id">
               <th scope="row">{{item.Descripcion}}</th>
               <td>{{item.Stock}}</td>
               <td>{{item.PrecioVenta}}</td>
@@ -107,10 +106,17 @@ export default {
     };
   },
   created() {
-    this.listarPacientes();
+    this.listarProductos();
+  },
+  computed: {
+    items() {
+      return this.productos.filter(item => {
+        return item.Descripcion.toLowerCase().includes(this.search.toLowerCase());
+      });
+    },
   },
   methods: {
-    listarPacientes() {
+    listarProductos() {
       this.axios
         .get("/productos")
         .then(response => {
@@ -135,7 +141,7 @@ export default {
           this.showModal();
           console.log("Res" + res);
           this.productId = "";
-          this.listarPacientes();
+          this.listarProductos();
         })
         .catch(e => {
           this.success = "2";
@@ -160,9 +166,16 @@ export default {
     },
     updateProduct() {
       this.axios
-        .put("/productos", this.producto)
+        .put(`/productos/${this.producto._id}`, {
+          Descripcion: this.producto.Descripcion,
+          Stock: this.producto.Stock,
+          PrecioVenta: this.producto.PrecioVenta,
+          Proveedor: this.producto.Proveedor,
+          Sucursal: this.producto.Sucursal
+        })
         .then(res => {
           console.log(res);
+          this.listarProductos();
           this.hideModalUpdate();
           this.producto = {};
           this.productId = '';
@@ -173,6 +186,9 @@ export default {
           this.productId = '';
           console.log(e);
         });
+    },
+    clearList() {
+      this.search = '';
     }
   }
 };
